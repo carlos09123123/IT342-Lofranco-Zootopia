@@ -13,7 +13,7 @@ export default function AboutPage() {
       name: "Lofranco, Carlos Rogel C.",
       email: "carlos.lofranco@cit.edu",
       phone: "8911-233-123",
-      image: "", // Removed carlos import, keeping empty string
+      image: "", 
     },
   ];
 
