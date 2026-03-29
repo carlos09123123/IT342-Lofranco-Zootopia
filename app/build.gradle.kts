@@ -83,7 +83,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Testing
-    testImplementation(libs.junit)
+    testImplementation(libs.junit)git push -u origin main
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
