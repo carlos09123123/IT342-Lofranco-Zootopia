@@ -1,0 +1,20 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Pawtopia" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/red</item>
+        <item name="colorPrimaryDark">@color/red_dark</item>
+        <item name="colorAccent">@color/red</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/red_dark</item>
+
+        <!-- Bottom Navigation styling -->
+        <item name="bottomNavigationStyle">@style/BottomNavigation.Pawtopia</item>
+    </style>
+
+    <style name="BottomNavigation.Pawtopia" parent="Widget.Design.BottomNavigationView">
+        <item name="itemIconTint">@color/red</item>
+        <item name="itemTextColor">@color/red</item>
+        <item name="itemBackground">@color/white</item>
+    </style>
+</resources>
