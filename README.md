@@ -1,7 +1,7 @@
 Here's the organized GitHub README for Pawtopia:
 markdown<div align="center">
 
-# 🐾 Pawtopia — Pet Shop System
+# 🐾 Zooopia — Pet Shop System
 
 **IT342 Project** · A full-stack pet shop management platform for customers and administrators
 
@@ -16,7 +16,7 @@ markdown<div align="center">
 
 ## 📖 About the Project
 
-Pawtopia is a one-stop solution for pet owners and shop managers alike. Customers can browse pet-related products, place orders, book grooming or veterinary appointments, and leave product reviews. Administrators can efficiently manage inventory, view orders, and maintain the product catalog through a user-friendly dashboard.
+Zootopia is a one-stop solution for pet owners and shop managers alike. Customers can browse pet-related products, place orders, book grooming or veterinary appointments, and leave product reviews. Administrators can efficiently manage inventory, view orders, and maintain the product catalog through a user-friendly dashboard.
 
 ---
 
