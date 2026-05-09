@@ -1,0 +1,14 @@
+﻿export { default as HomePage } from './HomePage';
+export { default as ProductsPage } from './ProductsPage';
+export { default as ProductDetailPage } from './ProductDetailPage';
+export { default as ServicesPage } from './ServicesPage';
+export { default as AppointmentPage } from './AppointmentPage';
+export { default as LoginPage } from './LoginPage';
+export { default as SignupPage } from './SignupPage';
+export { default as ProfilePage } from './ProfilePage';
+export { default as Orders } from './Orders';
+export { default as OrderDetails } from './OrderDetails';
+export { default as MyAppointments } from './MyAppointments';
+export { default as OAuthSuccess } from './OAuthSuccess';
+export { default as PaymentSuccess } from './PaymentSuccess';
+export { default as ProductReviews } from './ProductReviews';
