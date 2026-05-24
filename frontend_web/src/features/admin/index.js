@@ -1,4 +1,4 @@
-﻿export { default as AdminDashboard } from './pages/Dashboard';
+export { default as AdminDashboard } from './pages/Dashboard';
 export { default as AdminAppointments } from './pages/Appointments';
 export { default as AdminOrders } from './pages/AdminOrdersPage';
 export { default as AdminProducts } from './pages/Products';

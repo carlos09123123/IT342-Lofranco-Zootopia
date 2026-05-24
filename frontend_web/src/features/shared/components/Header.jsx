@@ -1,241 +1,223 @@
-﻿import { useEffect, useState } from 'react';  
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from './ui/Button';
-import { Search, ShoppingBag, Menu, PawPrint, LogOut, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ShoppingCart, User, Menu, X, PawPrint, LogOut, Settings, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
-import logout from '@shared/assets/logout.gif';
-
-import Avatar from './ui/Avatar';
-
-export default function Header({ activePage = 'home' }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // New state for logout animation
-
+export default function Header({ user }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
-
-  // Debug activePage
-  console.log('Header activePage:', activePage);
+  const location = useLocation();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            setUser({ name: 'User', avatar: '/default-avatar.png' });
-          }
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-          setUser(null);
-          setIsAuthenticated(false);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkAuth();
-
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
+    updateCartCount();
     
-    const handleLoginSuccess = () => {
-      checkAuth();
-    };
-    
-    window.addEventListener('loginSuccess', handleLoginSuccess);
+    // Listen for cart updates
+    const handleCartUpdate = () => updateCartCount();
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('loginSuccess', handleLoginSuccess);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
     };
   }, []);
-  
-  const handleLogout = () => {
-    // Show logout animation
-    setIsLoggingOut(true);
-    
-    // Wait for 1.5 seconds to show the animation before proceeding
-    setTimeout(() => {
-      // Clear authentication data
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem("email");
-      localStorage.removeItem("id");
-      localStorage.removeItem("role");
-      localStorage.removeItem("username");
-      localStorage.clear();
-      
-      // Update state
-      setIsAuthenticated(false);
-      setUser(null);
-      setShowDropdown(false);
-      setIsLoggingOut(false);
-      
-      // Dispatch events to notify other components
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new CustomEvent("logoutSuccess"));
-      
-      // Redirect to login page
-      navigate('/login');
-    }, 1500);
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartCount(totalItems);
   };
-  
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showDropdown && !event.target.closest('.avatar-dropdown')) {
-        setShowDropdown(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDropdown]);
-  
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('googleuser');
+    toast.success('Logged out successfully');
+    navigate('/');
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/products', label: 'Products' },
+    { path: '/services', label: 'Services' },
+    { path: '/about', label: 'About' },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
-      {isLoggingOut && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50">
-          <img 
-            src={logout}
-            alt="Logging out..." 
-            className="w-32 h-32 object-contain"
-          />
-          <div className="text-center mt-4">
-            <p className="text-white text-lg font-medium">Logging you out of Zootopia...</p>
-            <p className="text-gray-300 text-sm mt-1">Please wait while we secure your session</p>
+    <header className="bg-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <PawPrint className="w-8 h-8 text-red-600" />
+            <span className="text-xl font-bold text-gray-800">Zootopia</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`transition ${
+                  isActive(link.path)
+                    ? 'text-red-600 font-semibold'
+                    : 'text-gray-600 hover:text-red-600'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            {/* Cart Icon */}
+            <Link to="/cart" className="relative">
+              <ShoppingCart className="w-6 h-6 text-gray-600 hover:text-red-600 transition" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User Section */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 focus:outline-none"
+                >
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-red-600" />
+                  </div>
+                  <span className="hidden md:block text-sm text-gray-700">
+                    {user.firstName || user.username}
+                  </span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border">
+                      <div className="px-4 py-3 border-b">
+                        <p className="text-sm font-medium text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <UserCircle className="w-4 h-4" />
+                        Your Profile
+                      </Link>
+                      <Link
+                        to="/settings"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
+                      </Link>
+                      <Link
+                        to="/Mypurchases"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        My Orders
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-full hover:bg-red-700 transition"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-      )}
-      
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <PawPrint className="h-8 w-8 text-red-600" />
-          <span className="font-bold text-2xl text-red-600">Zootopia</span>
-        </div>
 
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link
-            to="/"
-            className={`font-medium transition-colors ${
-              activePage === 'home' 
-                ? 'text-red-600 border-b-2 border-red-600 pb-1' 
-                : 'text-gray-600 hover:text-red-600'
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            to="/products"
-            className={`font-medium transition-colors ${
-              activePage === 'products' 
-                ? 'text-red-600 border-b-2 border-red-600 pb-1' 
-                : 'text-gray-600 hover:text-red-600'
-            }`}
-          >
-            Products
-          </Link>
-          <Link
-            to="/services"
-            className={`font-medium transition-colors ${
-              activePage === 'services' 
-                ? 'text-red-600 border-b-2 border-red-600 pb-1' 
-                : 'text-gray-600 hover:text-red-600'
-            }`}
-          >
-            Services
-          </Link>
-          <Link
-            to="/about"
-            className={`font-medium transition-colors ${
-              activePage === 'about' 
-                ? 'text-red-600 border-b-2 border-red-600 pb-1' 
-                : 'text-gray-600 hover:text-red-600'
-            }`}
-          >
-            About Us
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-gray-600 hover:text-red-600">
-            <Link to="/cart" className="text-gray-600 hover:text-red-600 inline-flex items-center justify-center p-2 rounded-full hover:bg-red-50 focus:ring focus:ring-red-200">
-              <ShoppingBag className="h-5 w-5" />
-            </Link>
-          </Button>
-
-          {isLoading ? (
-            <div className="w-9 h-9"></div>
-          ) : isAuthenticated && user ? (
-            <div className="relative avatar-dropdown">
-              <div 
-                className="cursor-pointer" 
-                onClick={() => setShowDropdown(!showDropdown)}
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsMenuOpen(false)}
+                className={`block py-2 transition ${
+                  isActive(link.path)
+                    ? 'text-red-600 font-semibold'
+                    : 'text-gray-600 hover:text-red-600'
+                }`}
               >
-                <Avatar className="h-9 w-9 flex items-center justify-center bg-red-100">
-                  <User className="h-5 w-5 text-red-600" />
-                  <Avatar.Fallback className="text-red-600">{(user?.name?.[0] || 'U').toUpperCase()}</Avatar.Fallback>
-                </Avatar>
+                {link.label}
+              </Link>
+            ))}
+            {!user && (
+              <div className="pt-4 mt-4 border-t">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-2 text-gray-600 hover:text-red-600"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-2 text-gray-600 hover:text-red-600"
+                >
+                  Sign Up
+                </Link>
               </div>
-              
-              {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                    <div className="font-medium">Signed in as</div>
-                    <div className="truncate">{user?.name || 'User'}</div>
-                  </div>
-                  <Link 
-                    to="/profile" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
-                    onClick={() => setShowDropdown(false)}
-                  >
-                    Your Profile
-                  </Link>
-                  <Link 
-                    to="/settings" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
-                    onClick={() => setShowDropdown(false)}
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Button className="hidden md:flex bg-red-600 hover:bg-red-700 text-white" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-          )}
-
-          <Button variant="ghost" size="icon" className="md:hidden text-gray-600 hover:text-red-600">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

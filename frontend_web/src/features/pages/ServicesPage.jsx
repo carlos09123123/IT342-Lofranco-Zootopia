@@ -1,8 +1,8 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Footer from '@shared/components/Footer';
-import { Button } from '@shared/components/ui/Button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/ui/Breadcrumb';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@shared/components/ui/Card';
+import { Button } from '@shared/components/Button';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/Breadcrumb';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@shared/components/Card';
 import { Scissors, Home, PawPrint } from 'lucide-react';
 
 import petgrooming from '@shared/assets/petgrooming.jpg';
@@ -22,7 +22,7 @@ export default function ServicesPage() {
         "Teeth brushing",
         "Specialized skin treatments",
       ],
-      price: "From ₱500",
+      price: "From ?500",
       image: petgrooming,
       icon: Scissors,
     },
@@ -38,7 +38,7 @@ export default function ServicesPage() {
         "Medication administration",
         "Daily updates and photos",
       ],
-      price: "From ₱800/night",
+      price: "From ?800/night",
       image: petboarding,
       icon: Home,
     },

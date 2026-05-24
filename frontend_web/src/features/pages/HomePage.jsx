@@ -1,12 +1,14 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Footer from '@shared/components/Footer';
-import { Button } from '@shared/components/ui/Button';
+import { Button } from '@shared/components/Button';
 import { useEffect, useState } from 'react';
 import petgrooming from '@shared/assets/petgrooming.jpg';
 import petboarding from '@shared/assets/petboarding.png';
 import happypets from '@shared/assets/happypets.webp';
 import animation from '@shared/assets/animation.gif';
-const API_BASE_URL_PRODUCT = import.meta.env.VITE_API_BASE_URL_PRODUCT;
+
+// FIXED: Hardcode the API URL instead of using environment variable
+const API_BASE_URL_PRODUCT = 'http://localhost:8080/api/product';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -17,13 +19,17 @@ export default function HomePage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log("Fetching products for homepage from:", `${API_BASE_URL_PRODUCT}/getProduct`);
         const response = await fetch(`${API_BASE_URL_PRODUCT}/getProduct`);
+        
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }
         const data = await response.json();
+        console.log("Homepage products received:", data.length);
         setProducts(data);
       } catch (err) {
+        console.error("Homepage fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -72,7 +78,20 @@ export default function HomePage() {
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-red-500 text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Homepage</h2>
+          <p className="mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -130,7 +149,7 @@ export default function HomePage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            No Image Available
+                            No Image
                           </div>
                         )}
                       </div>
@@ -190,7 +209,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Rest of your sections remain the same */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -254,8 +272,7 @@ export default function HomePage() {
                     ))}
                   </div>
                   <p className="text-gray-600 mb-4">
-                    "Zootopia has been a lifesaver for me and my pets. The quality of their products and services is
-                    unmatched!"
+                    "Zootopia has been a lifesaver for me and my pets. The quality of their products and services is unmatched!"
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-red-200"></div>

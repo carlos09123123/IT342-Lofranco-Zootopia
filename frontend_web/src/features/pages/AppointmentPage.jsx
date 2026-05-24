@@ -1,9 +1,12 @@
-﻿import { useState } from 'react';
-import { Button } from '@shared/components/ui/Button';
-import { Input } from '@shared/components/ui/Input';
-import { Label } from '@shared/components/ui/Label';
-import { Calendar, Clock, X } from 'lucide-react';
-const API_BASE_URL_USER_APPOINTMENT = import.meta.env.VITE_API_BASE_URL_APPOINTMENT;
+import { useState } from 'react';
+import { Button } from '@shared/components/Button';
+import { Input } from '@shared/components/Input';
+import { Label } from '@shared/components/Label';
+import { Calendar, Clock, X, Scissors, Home } from 'lucide-react';
+import Footer from '@shared/components/Footer';
+import { toast } from 'sonner';
+
+const API_BASE_URL_USER_APPOINTMENT = 'http://localhost:8080/appointments';
 
 export default function AppointmentPage() {
   const [contactNo, setContactNo] = useState("");
@@ -19,13 +22,12 @@ export default function AppointmentPage() {
 
   // Get current date and time for restrictions
   const today = new Date();
-  const currentTime = today.toTimeString().slice(0, 5); // Format: HH:MM
-  const shopOpenTime = "08:00"; // Shop opens at 8:00 AM
-  const shopCloseTime = "20:00"; // Shop closes at 8:00 PM
-  // Set minDate to tomorrow if current time is after 8:00 PM
+  const currentTime = today.toTimeString().slice(0, 5);
+  const shopOpenTime = "08:00";
+  const shopCloseTime = "20:00";
   const minDate = currentTime > shopCloseTime 
     ? new Date(today.setDate(today.getDate() + 1)).toISOString().split("T")[0]
-    : today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    : today.toISOString().split("T")[0];
 
   const validateForm = () => {
     let formErrors = {};
@@ -38,18 +40,17 @@ export default function AppointmentPage() {
     } else {
       const selectedDate = new Date(date);
       const minDateObj = new Date(minDate);
-      if (selectedDate < minDateObj.setHours(0, 0, 0, 0)) {
+      minDateObj.setHours(0, 0, 0, 0);
+      if (selectedDate < minDateObj) {
         formErrors.date = "Date cannot be in the past";
       }
     }
     if (!time) {
       formErrors.time = "Time is required";
     } else {
-      // Ensure time is within shop hours (8:00 AM to 8:00 PM)
       if (time < shopOpenTime || time > shopCloseTime) {
         formErrors.time = "Time must be between 8:00 AM and 8:00 PM";
       }
-      // If today is selected, ensure time is not in the past
       if (date === minDate && time < currentTime) {
         formErrors.time = "Time cannot be in the past for today";
       }
@@ -60,45 +61,57 @@ export default function AppointmentPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    console.log("Form submitted!");
+    
+    const token = localStorage.getItem("token");
+    console.log("Token:", token);
+    
     const localUser = JSON.parse(localStorage.getItem("user") || "null");
     const googleUser = JSON.parse(localStorage.getItem("googleuser") || "null");
-  
-    // Unified token from localStorage
-    const token = localStorage.getItem("token");
+    
+    console.log("Local user:", localUser);
+    console.log("Google user:", googleUser);
   
     if (!localUser && !googleUser) {
-      window.alert('No user found. Please log in first.');
+      console.log("No user found");
+      toast.error('Please log in first.');
+      return;
+    }
+  
+    if (!token) {
+      console.log("No token found");
+      toast.error("You need to be logged in to book an appointment");
       return;
     }
   
     const formErrors = validateForm();
+    console.log("Form errors:", formErrors);
     setErrors(formErrors);
   
     if (Object.keys(formErrors).length === 0) {
+      console.log("Form is valid, submitting...");
       setIsSubmitting(true);
   
       try {
-        if (!token) {
-          throw new Error("You need to be logged in to book an appointment");
-        }
-  
+        const userId = localUser?.userId || localUser?.id || googleUser?.userId || googleUser?.id;
+        const email = localUser?.email || googleUser?.email;
+        
         const appointmentData = {
-          email: localUser ? localUser.logemail : googleUser.email,
-          contactNo,
-          date,
-          time,
+          email: email,
+          contactNo: contactNo,
+          date: date,
+          time: time,
           groomService: service,
-          price,
+          price: parseInt(price),
           confirmed: false,
           canceled: false,
           user: {
-            userId: localUser ? localUser.id : googleUser.userId,
+            userId: userId,
           },
         };
   
         console.log("Sending appointment data:", appointmentData);
-        console.log("Token being used:", token);
+        console.log("API URL:", `${API_BASE_URL_USER_APPOINTMENT}/postAppointment`);
   
         const response = await fetch(`${API_BASE_URL_USER_APPOINTMENT}/postAppointment`, {
           method: "POST",
@@ -109,7 +122,9 @@ export default function AppointmentPage() {
           body: JSON.stringify(appointmentData),
         });
   
+        console.log("Response status:", response.status);
         const responseData = await response.json();
+        console.log("Response data:", responseData);
   
         if (response.ok) {
           setModalData({ service, date, time, price });
@@ -119,21 +134,26 @@ export default function AppointmentPage() {
           setTime("");
           setService("");
           setPrice("");
+          toast.success("Appointment booked successfully!");
         } else {
-          console.error("Failed to book appointment:", responseData.message);
-          alert(responseData.message || "Failed to book appointment");
+          console.error("Failed to book appointment:", responseData);
+          toast.error(responseData.message || responseData || "Failed to book appointment");
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("Network error. Please try again.");
+        toast.error("Network error. Please try again.");
       } finally {
         setIsSubmitting(false);
       }
+    } else {
+      console.log("Form has errors:", formErrors);
+      toast.error("Please fix the errors in the form");
     }
   };
 
-  const handleServiceChange = (value) => {
+  const handleServiceChange = (value, servicePrice) => {
     setService(value);
+    setPrice(servicePrice.toString());
   };
 
   return (
@@ -168,7 +188,7 @@ export default function AppointmentPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Total:</p>
-                  <p className="font-medium text-red-700">₱{modalData.price}</p>
+                  <p className="font-medium text-red-600">₱{modalData.price}</p>
                 </div>
               </div>
               <Button 
@@ -182,15 +202,20 @@ export default function AppointmentPage() {
         </div>
       )}
 
-      <main className="flex-1">
+      <main className="flex-1 bg-gray-50">
         <form onSubmit={handleSubmit}>
           <section className="py-12">
             <div className="container mx-auto px-4">
-              <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Book an Appointment</h1>
+                <p className="text-gray-600 mt-2">Schedule a grooming or boarding session for your beloved pet</p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 
                 {/* Personal Information Column */}
                 <div className="space-y-6">
-                  <div className="bg-white p-8 rounded-xl shadow-sm">
+                  <div className="bg-white p-8 rounded-xl shadow-sm border">
                     <h2 className="text-2xl font-bold mb-6 text-red-700">Personal Information</h2>
                     <div className="space-y-4">
                       <div className="grid gap-2">
@@ -199,7 +224,8 @@ export default function AppointmentPage() {
                           id="contactNo" 
                           value={contactNo}
                           onChange={(e) => setContactNo(e.target.value)}
-                          className={`pl-10 rounded-lg focus:ring-red-500 focus:border-red-500 ${errors.contactNo ? 'border-red-500' : ''}`}
+                          placeholder="Enter your contact number"
+                          className={`rounded-lg focus:ring-red-500 focus:border-red-500 ${errors.contactNo ? 'border-red-500' : ''}`}
                         />
                         {errors.contactNo && <p className="text-red-500 text-xs mt-1">{errors.contactNo}</p>}
                       </div>
@@ -209,7 +235,7 @@ export default function AppointmentPage() {
 
                 {/* Service Selection Column */}
                 <div className="space-y-6">
-                  <div className="bg-white p-8 rounded-xl shadow-sm">
+                  <div className="bg-white p-8 rounded-xl shadow-sm border">
                     <h2 className="text-2xl font-bold mb-6 text-red-700">Service Selection</h2>
                     <div className="space-y-6">
                       
@@ -217,78 +243,55 @@ export default function AppointmentPage() {
                       <div className="grid gap-2">
                         <Label>Service Type</Label>
                         <div className="space-y-3">
-                          <div className="flex items-center space-x-2">
+                          <div 
+                            onClick={() => handleServiceChange("Grooming", 500)}
+                            className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition ${
+                              service === "Grooming" ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-red-300"
+                            }`}
+                          >
                             <input
                               type="radio"
                               id="grooming"
                               name="service"
                               value="Grooming"
                               checked={service === "Grooming"}
-                              onChange={() => handleServiceChange("Grooming")}
+                              onChange={() => handleServiceChange("Grooming", 500)}
                               className="h-4 w-4 text-red-600 focus:ring-red-500"
                             />
-                            <Label htmlFor="grooming" className="font-normal">
-                              Grooming
+                            <Scissors className={`w-5 h-5 ${service === "Grooming" ? "text-red-600" : "text-gray-400"}`} />
+                            <Label htmlFor="grooming" className="font-normal cursor-pointer flex-1">
+                              Grooming - ₱500
                             </Label>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          
+                          <div 
+                            onClick={() => handleServiceChange("Boarding", 1000)}
+                            className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition ${
+                              service === "Boarding" ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-red-300"
+                            }`}
+                          >
                             <input
                               type="radio"
                               id="boarding"
                               name="service"
                               value="Boarding"
                               checked={service === "Boarding"}
-                              onChange={() => handleServiceChange("Boarding")}
+                              onChange={() => handleServiceChange("Boarding", 1000)}
                               className="h-4 w-4 text-red-600 focus:ring-red-500"
                             />
-                            <Label htmlFor="boarding" className="font-normal">
-                              Boarding
+                            <Home className={`w-5 h-5 ${service === "Boarding" ? "text-red-600" : "text-gray-400"}`} />
+                            <Label htmlFor="boarding" className="font-normal cursor-pointer flex-1">
+                              Boarding - ₱1000
                             </Label>
                           </div>
                         </div>
                         {errors.service && <p className="text-red-500 text-xs mt-1">{errors.service}</p>}
                       </div>
-
-                      {/* Price Options */}
-                      <div className="grid gap-2">
-                        <Label>Price</Label>
-                        <div className="space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="price500"
-                              name="price"
-                              value="500"
-                              checked={price === "500"}
-                              onChange={() => setPrice("500")}
-                              className="h-4 w-4 text-red-600 focus:ring-red-500"
-                            />
-                            <Label htmlFor="price500" className="font-normal">
-                              ₱500
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="price1000"
-                              name="price"
-                              value="1000"
-                              checked={price === "1000"}
-                              onChange={() => setPrice("1000")}
-                              className="h-4 w-4 text-red-600 focus:ring-red-500"
-                            />
-                            <Label htmlFor="price1000" className="font-normal">
-                              ₱1000
-                            </Label>
-                          </div>
-                        </div>
-                        {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                      </div>
                     </div>
                   </div>
 
                   {/* Appointment Details */}
-                  <div className="bg-white p-8 rounded-xl shadow-sm">
+                  <div className="bg-white p-8 rounded-xl shadow-sm border">
                     <h2 className="text-2xl font-bold mb-6 text-red-700">Appointment Details</h2>
                     <div className="space-y-4">
                       <div className="grid gap-2">
@@ -317,7 +320,7 @@ export default function AppointmentPage() {
                             onChange={(e) => setTime(e.target.value)}
                             min={shopOpenTime}
                             max={shopCloseTime}
-                            step="300" // 5-minute intervals (300 seconds)
+                            step="300"
                             className={`pl-10 rounded-lg focus:ring-red-500 focus:border-red-500 ${errors.time ? 'border-red-500' : ''}`}
                           />
                           {errors.time && <p className="text-red-500 text-xs mt-1">{errors.time}</p>}
@@ -327,7 +330,7 @@ export default function AppointmentPage() {
                   </div>
 
                   {/* Summary and Submit */}
-                  <div className="bg-white p-8 rounded-xl shadow-sm">
+                  <div className="bg-white p-8 rounded-xl shadow-sm border">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between font-bold text-lg">
                         <span>Total:</span>
@@ -348,6 +351,7 @@ export default function AppointmentPage() {
           </section>
         </form>
       </main>
+      <Footer />
     </div>
   );
 }

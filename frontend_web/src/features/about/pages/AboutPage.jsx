@@ -1,7 +1,7 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Footer from '@shared/components/Footer';
-import { Button } from '@shared/components/ui/Button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/ui/Breadcrumb';
+import { Button } from '@shared/components/Button';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/Breadcrumb';
 import { Mail, Phone, PawPrint } from 'lucide-react';
 
 import aboutusbg from '@shared/assets/aboutusbg.jpg';

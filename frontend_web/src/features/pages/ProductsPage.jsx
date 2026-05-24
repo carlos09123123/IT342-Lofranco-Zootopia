@@ -1,11 +1,14 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Footer from '@shared/components/Footer';
-import { Button } from '@shared/components/ui/Button';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/ui/Breadcrumb';
+import { Button } from '@shared/components/Button';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@shared/components/Breadcrumb';
 import { Filter, ChevronDown, Search } from 'lucide-react';
 
 import animation from '@shared/assets/animation.gif';
+
+// FIXED: Hardcode the API URL instead of using environment variable
+const API_BASE_URL_PRODUCT = 'http://localhost:8080/api/product';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -18,7 +21,6 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 8;
-  const API_BASE_URL_PRODUCT = import.meta.env.VITE_API_BASE_URL_PRODUCT;
 
   // Scroll to top when the page loads
   useEffect(() => {
@@ -28,11 +30,18 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log("Fetching products from:", `${API_BASE_URL_PRODUCT}/getProduct`);
         const response = await fetch(`${API_BASE_URL_PRODUCT}/getProduct`);
+        
+        console.log("Response status:", response.status);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch products');
+          throw new Error(`Failed to fetch products: ${response.status}`);
         }
+        
         const data = await response.json();
+        console.log("Products received:", data.length);
+        
         // Ensure data is an array
         if (!Array.isArray(data)) {
           throw new Error('Invalid data format: expected array');
@@ -42,7 +51,7 @@ export default function ProductsPage() {
       } catch (err) {
         console.error('Fetch error:', err);
         setError(err.message);
-        setProducts([]); // Ensure it's always an array
+        setProducts([]);
         setFilteredProducts([]);
       } finally {
         setLoading(false);
@@ -77,17 +86,11 @@ export default function ProductsPage() {
       case 'price-high':
         result.sort((a, b) => b.productPrice - a.productPrice);
         break;
-      case 'newest':
-        // Assuming you have a createdAt field in your Product entity
-        // result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
       default:
-        // 'featured' or default sorting
         break;
     }
 
     setFilteredProducts(result);
-    // Reset to first page when filters change
     setCurrentPage(1);
   }, [products, categoryFilter, searchTerm, sortOption]);
 
@@ -99,7 +102,6 @@ export default function ProductsPage() {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    // Scroll to top of products section
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -118,7 +120,6 @@ export default function ProductsPage() {
           </p>
           <p className="text-gray-500 text-base">
             We're preparing the best pet care products and services for your furry friends.
-            At Zootopia, we believe every pet deserves happiness, health, and love.
           </p>
         </div>
       </div>
@@ -126,7 +127,20 @@ export default function ProductsPage() {
   }
   
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-red-500 text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Products</h2>
+          <p className="mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Extract unique product types for filter options
@@ -187,8 +201,6 @@ export default function ProductsPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-
-        
                 </div>
               </div>
 
@@ -228,10 +240,10 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {currentProducts.map((product) => (
                     <div
-                      key={product.productID}
+                      key={product.productId}
                       className="bg-white rounded-xl shadow-sm border p-6 transition-all hover:shadow-md hover:border-red-200"
                     >
-                      <Link to={`/products/${product.productID}`} className="block">
+                      <Link to={`/products/${product.productId}`} className="block">
                         <div className="aspect-square mb-4 bg-gray-100 rounded-lg overflow-hidden">
                           {product.productImage ? (
                             <img
@@ -241,7 +253,7 @@ export default function ProductsPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              No Image Available
+                              No Image
                             </div>
                           )}
                         </div>
@@ -254,46 +266,48 @@ export default function ProductsPage() {
                         </div>
                       </Link>
                       <Button className="w-full rounded-full mt-2 bg-red-600 hover:bg-red-700">
-                        <Link to={`/products/${product.productID}`}>View Details</Link>
+                        <Link to={`/products/${product.productId}`}>View Details</Link>
                       </Button>
                     </div>
                   ))}
                 </div>
 
                 {/* Pagination */}
-                <div className="flex justify-center mt-12">
-                  <nav className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full hover:border-red-600 hover:text-red-600"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronDown className="h-4 w-4 rotate-90" />
-                    </Button>
-                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-12">
+                    <nav className="flex items-center gap-1">
                       <Button
-                        key={page}
-                        variant={currentPage === page ? 'default' : 'outline'}
-                        size="sm"
-                        className={`rounded-full ${currentPage === page ? 'bg-red-600 hover:bg-red-700' : 'hover:border-red-600 hover:text-red-600'}`}
-                        onClick={() => handlePageChange(page)}
+                        variant="outline"
+                        size="icon"
+                        className="rounded-full hover:border-red-600 hover:text-red-600"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
                       >
-                        {page}
+                        <ChevronDown className="h-4 w-4 rotate-90" />
                       </Button>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full hover:border-red-600 hover:text-red-600"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronDown className="h-4 w-4 -rotate-90" />
-                    </Button>
-                  </nav>
-                </div>
+                      {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          size="sm"
+                          className={`rounded-full ${currentPage === page ? 'bg-red-600 hover:bg-red-700' : 'hover:border-red-600 hover:text-red-600'}`}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-full hover:border-red-600 hover:text-red-600"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronDown className="h-4 w-4 -rotate-90" />
+                      </Button>
+                    </nav>
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-12">

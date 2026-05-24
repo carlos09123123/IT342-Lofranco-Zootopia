@@ -1,10 +1,10 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@shared/components/ui/Button';
-import { Input } from '@shared/components/ui/Input';
-import { Label } from '@shared/components/ui/Label';
+import { Button } from '@shared/components/Button';
+import { Input } from '@shared/components/Input';
+import { Label } from '@shared/components/Label';
 import { PawPrint } from 'lucide-react';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL_USER;
+const API_BASE_URL = 'http://localhost:8080/users';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -330,7 +330,7 @@ export default function SignupPage() {
           <PawPrint className="h-5 w-5 text-red-600" />
           <span className="font-bold text-red-600">Zootopia</span>
         </div>
-        <p className="text-sm text-gray-500 mt-2">© {new Date().getFullYear()} Zootopia. All Rights Reserved.</p>
+        <p className="text-sm text-gray-500 mt-2">� {new Date().getFullYear()} Zootopia. All Rights Reserved.</p>
       </footer>
     </div>
   );

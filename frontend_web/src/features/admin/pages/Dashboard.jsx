@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for client-side navigation
 import AdminHeader from '@shared/components/AdminHeader';
 import axios from 'axios';
@@ -66,25 +66,25 @@ const AdminDashboard = () => {
           <DashboardCard 
             title="Inventory Items" 
             value={stats.inventory} 
-            icon="📊" 
+            icon="??" 
             color="bg-red-100 text-red-800"
           />
           <DashboardCard 
             title="Total Users" 
             value={stats.users} 
-            icon="👥" 
+            icon="??" 
             color="bg-red-100 text-red-800"
           />
           <DashboardCard 
             title="Recent Orders" 
             value={stats.orders} 
-            icon="📦" 
+            icon="??" 
             color="bg-red-100 text-red-800"
           />
           <DashboardCard 
             title="Appointments" 
             value={stats.appointments} 
-            icon="📅" 
+            icon="??" 
             color="bg-red-100 text-red-800"
           />
         </div>
@@ -95,22 +95,22 @@ const AdminDashboard = () => {
             <ActionButton 
               label="Add Product" 
               path="/adminProducts"
-              icon="➕"
+              icon="?"
             />
             <ActionButton 
               label="View Users" 
               path="/adminUsers" 
-              icon="👥"
+              icon="??"
             />
             <ActionButton 
               label="Process Orders" 
               path="/adminOrders" // Fixed path to match route in App.jsx
-              icon="📦"
+              icon="??"
             />
             <ActionButton 
               label="Schedule" 
               path="/adminAppointments" 
-              icon="📅"
+              icon="??"
             />
           </div>
         </div>

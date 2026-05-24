@@ -1,7 +1,8 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminLoginImage from '@shared/assets/adminlogin.webp';
-const API_BASE_URL_ADMIN = import.meta.env.VITE_API_BASE_URL_ADMIN;
+
+const API_BASE_URL_ADMIN = 'http://localhost:8080/admin';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -9,7 +10,7 @@ const AdminLogin = () => {
   const [role, setRole] = useState('ADMIN');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // New state for successful auth
+  const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,6 +25,8 @@ const AdminLogin = () => {
     setIsLoading(true);
   
     try {
+      console.log("Attempting login with:", { username, password });
+      
       const response = await fetch(`${API_BASE_URL_ADMIN}/login`, {
         method: 'POST',
         headers: {
@@ -35,27 +38,39 @@ const AdminLogin = () => {
         }),
       });
   
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
+        console.log("Error response:", errorText);
         throw new Error(errorText || 'Authentication failed');
       }
   
       const token = await response.text();
-      localStorage.setItem('token', token); // Store as 'token' to match AdminRoute
+      console.log("Token received:", token);
       
-      // Store user data with role 'admin'
+      // Store token in both formats for compatibility
+      localStorage.setItem('token', token);
+      localStorage.setItem('adminToken', token);
+      
       localStorage.setItem('user', JSON.stringify({
         username,
         role: 'admin',
       }));
       
-      // Show success loading screen
+      console.log("Token stored in localStorage");
+      
       setIsSuccess(true);
       
-      // Navigate immediately after success
-      navigate('/adminDashboard');
+      // Navigate to admin dashboard after short delay
+      setTimeout(() => {
+        navigate('/adminDashboard');
+      }, 1500);
+      
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.message || 'Login failed. Please try again.');
+      setIsSuccess(false);
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +197,7 @@ const AdminLogin = () => {
 
       <div className="mt-8 text-center text-sm text-gray-500">
         Zootopia<br />
-        © 2025 Zootopia. All Rights Reserved.
+        � 2025 Zootopia. All Rights Reserved.
       </div>
     </div>
   );

@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { PawPrint } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import Footer from "../components/Footer";
-import { Button } from "../components/ui/Button";
+import Footer from "@shared/components/Footer";
+import { Button } from "@shared/components/Button";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL_USER;
+const API_BASE_URL = 'http://localhost:8080/users';
 const API_BASE_URL_ADDRESS = import.meta.env.VITE_API_BASE_URL_ADDRESS;
 
 export default function ProfilePage() {

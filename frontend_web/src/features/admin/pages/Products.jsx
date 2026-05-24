@@ -1,9 +1,10 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '@shared/components/AdminHeader';
 import axios from 'axios';
-const API_BASE_URL_ADMIN_PRODUCT = import.meta.env.VITE_API_BASE_URL_PRODUCT;
 
+// FIXED: Hardcode the API URL instead of using environment variable
+const API_BASE_URL_ADMIN_PRODUCT = 'http://localhost:8080/api/product';
 
 const AdminProducts = () => {
   const [username, setUsername] = useState('Admin');
@@ -32,13 +33,28 @@ const AdminProducts = () => {
   const [openDeleteConfirmDialog, setOpenDeleteConfirmDialog] = useState(false);
   const navigate = useNavigate();
 
+  // Helper function to get token
+  const getToken = () => {
+    const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
+    console.log("getToken() returned:", token ? `${token.substring(0, 50)}...` : "null");
+    return token;
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL_ADMIN_PRODUCT}/getProduct`);
+      const token = getToken();
+      console.log("Fetching products with token:", !!token);
+      
+      const response = await fetch(`${API_BASE_URL_ADMIN_PRODUCT}/getProduct`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        }
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch products");
@@ -58,9 +74,12 @@ const AdminProducts = () => {
 
   const handleAddProduct = async () => {
     try {
-      const token = localStorage.getItem("adminToken"); // Retrieve the token
+      const token = getToken();
+      console.log("handleAddProduct - Token exists:", !!token);
+      console.log("Product data being sent:", newProduct);
+      
       if (!token) {
-        setError("Unauthorized: No admin token found");
+        setError("Unauthorized: No admin token found. Please login again.");
         return;
       }
   
@@ -76,13 +95,17 @@ const AdminProducts = () => {
         }
       );
   
-      // Check if the response contains JSON
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
+        console.log("Error response data:", errorData);
         throw new Error(errorData?.message || "Failed to create product");
       }
   
       const data = await response.json();
+      console.log("Product created successfully:", data);
+      
       if (response.status === 200 || response.status === 201) {
         fetchProducts();
         setNewProduct({
@@ -94,13 +117,14 @@ const AdminProducts = () => {
           productType: ''
         });
         setShowAddForm(false);
+        setError('');
+        alert("Product added successfully!");
       }
     } catch (error) {
       console.error("Error creating product:", error);
       setError(error.message || "Failed to create product");
     }
   };
-  
 
   const handleEdit = (product) => {
     setEditingId(product.productID);
@@ -114,49 +138,46 @@ const AdminProducts = () => {
     });
   };
 
- // In AdminProducts.jsx, replace your existing handleUpdate with this:
-
-const handleUpdate = async (productId) => {
-  try {
-    // 1️⃣ Grab the admin token you saved at login
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      setError("Unauthorized: No admin token found");
-      return;
-    }
-
-    // 2️⃣ Send the update via axios, passing your editForm as the body
-    const response = await axios.put(
-      `${API_BASE_URL_ADMIN_PRODUCT}/putProduct/${productId}`,
-      editForm,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+  const handleUpdate = async (productId) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        setError("Unauthorized: No admin token found. Please login again.");
+        return;
       }
-    );
 
-    // 3️⃣ If it succeeds, refresh and exit edit mode
-    if (response.status === 200 || response.status === 204) {
-      console.log("Product updated successfully");
-      fetchProducts();
-      setEditingId(null);
-    } else {
-      throw new Error("Failed to update product");
-    }
+      const response = await axios.put(
+        `${API_BASE_URL_ADMIN_PRODUCT}/putProduct/${productId}`,
+        editForm,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200 || response.status === 204) {
+        console.log("Product updated successfully");
+        fetchProducts();
+        setEditingId(null);
+        setError('');
+        alert("Product updated successfully!");
+      } else {
+        throw new Error("Failed to update product");
+      }
 
     } catch (err) {
       console.error("Error updating product:", err);
       setError("Failed to update product. Make sure you're logged in as admin.");
-      }
-    };
+    }
+  };
   
   const handleDelete = async (productId) => {
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = getToken();
       if (!token) {
-        setError("Unauthorized: No admin token found");
+        setError("Unauthorized: No admin token found. Please login again.");
         return;
       }
   
@@ -172,7 +193,9 @@ const handleUpdate = async (productId) => {
   
       if (response.status === 200 || response.status === 204) {
         console.log("Deleted successfully");
-        fetchProducts(); // refresh the list
+        fetchProducts();
+        setError('');
+        alert("Product deleted successfully!");
       } else {
         throw new Error("Failed to delete product");
       }
@@ -184,21 +207,39 @@ const handleUpdate = async (productId) => {
   };
 
   const handleLogout = () => {
-    // Additional logout logic can go here
-    console.log('Admin logged out');
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("user");
+    navigate('/admin');
   };
   
   if (loading) return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="text-6xl animate-bounce mb-4">📦</div>
+        <div className="text-6xl animate-bounce mb-4">🐾</div>
         <h2 className="text-2xl font-bold text-gray-700">Loading Zootopia Inventory...</h2>
         <p className="text-gray-500 mt-2">Fetching all the goodies for your pets!</p>
       </div>
     </div>
   );
 
-  if (error) return <div>Error: {error}</div>;
+  if (error) return (
+    <div className="min-h-screen bg-gray-50">
+      <AdminHeader username={username} onLogout={handleLogout} />
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -386,7 +427,6 @@ const handleUpdate = async (productId) => {
                      <option value="Care Products">Care Products</option>
                      <option value="Foods">Foods</option>
                    </select>
-                   
                     ) : (
                       product.productType || 'general'
                     )}

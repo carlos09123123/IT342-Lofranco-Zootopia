@@ -1,4 +1,4 @@
-﻿export { default as Avatar } from './components/Avatar';
+export { default as Avatar } from './components/Avatar';
 export { default as Breadcrumb } from './components/Breadcrumb';
 export { default as Button } from './components/Button';
 export { default as Card } from './components/Card';

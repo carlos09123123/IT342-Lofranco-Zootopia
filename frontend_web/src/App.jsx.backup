@@ -1,30 +1,29 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import HomePage from "./features/pages/HomePage";
-import ProductsPage from "./features/pages/ProductsPage";
-import ProductDetailPage from "./features/pages/ProductDetailPage";
-import ServicesPage from "./features/pages/ServicesPage";
-import AppointmentPage from "./features/pages/AppointmentPage";
-import AboutPage from "./features/about/pages/AboutPage";
-import LoginPage from "./features/pages/LoginPage";
-import SignupPage from "./features/pages/SignupPage";
-import Header from "./features/shared/components/Header";
-import ProfilePage from "./features/pages/ProfilePage";
-import SettingsPage from "./features/pages/SettingsPage";
-import AdminLogin from "./features/auth/pages/AdminLogin";
-import AdminDashboard from "./features/admin/pages/Dashboard";
-import AdminUsers from './features/admin/pages/Users';
-import AdminProducts from "./features/admin/pages/Products";
-import AdminOrders from "./features/admin/pages/AdminOrdersPage";
-import CartPage from "./features/shop/pages/CartPage";
-import AdminAppointments from "./features/admin/pages/Appointments";
-import OrderDetails from "./features/pages/OrderDetails";
-import CheckoutPage from "./features/checkout/pages/CheckoutPage";
-import Orders from "./features/pages/Orders";
-import Appointments from "./features/pages/MyAppointments";
-import OAuthSuccess from "./features/pages/OAuthSuccess";
-import PaymentSuccess from "./features/pages/PaymentSuccess";
-import MyAppointments from "./features/pages/MyAppointments";
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import ServicesPage from "./pages/ServicesPage";
+import AppointmentPage from "./pages/AppointmentPage";
+import AboutPage from "./pages/AboutPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import Header from "./components/Header";
+import ProfilePage from "./pages/ProfilePage";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from './pages/AdminUsers';
+import AdminProducts from "./pages/AdminProducts";
+import AdminOrders from "./pages/AdminOrders";
+import CartPage from "./pages/CartPage";
+import AdminAppointments from "./pages/AdminAppointments";
+import OrderDetails from "./pages/OrderDetails";
+import CheckoutPage from "./pages/CheckoutPage";
+import Orders from "./pages/Orders";
+import Appointments from "./pages/Appointments";
+import OAuthSuccess from "./pages/OAuthSuccess";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import MyAppointments from "./pages/MyAppointments";
 
 // Protected route component to handle authentication
 function ProtectedRoute({ children }) {
@@ -41,10 +40,7 @@ function ProtectedRoute({ children }) {
 function AdminRoute({ children }) {
   const isAuthenticated = localStorage.getItem('token') !== null;
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  const googleUserData = JSON.parse(localStorage.getItem('googleuser') || '{}');
-  
-  const userRole = userData.role || googleUserData.role;
-  const isAdmin = userRole === 'admin' || userRole === 'ADMIN' || userRole === 'ROLE_ADMIN';
+  const isAdmin = userData.role === 'admin';
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to="/admin" replace />;
@@ -58,23 +54,23 @@ function Layout({ children }) {
   const [user, setUser] = useState(null);
   
   useEffect(() => {
+    // Get user data from localStorage
     const token = localStorage.getItem('token');
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    const googleUserData = JSON.parse(localStorage.getItem('googleuser') || '{}');
     
     if (token) {
-      setUser(userData.username ? userData : googleUserData);
+      setUser(userData);
     } else {
       setUser(null);
     }
     
+    // Listen for login/logout events
     const handleStorageChange = () => {
       const token = localStorage.getItem('token');
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const googleUserData = JSON.parse(localStorage.getItem('googleuser') || '{}');
       
       if (token) {
-        setUser(userData.username ? userData : googleUserData);
+        setUser(userData);
       } else {
         setUser(null);
       }
@@ -102,6 +98,7 @@ function App() {
   const hideHeaderRoutes = ["/login", "/signup", "/admin", "/oauth-success"];
   const shouldHideHeader = hideHeaderRoutes.includes(location.pathname);
   
+  // Auth state listener
   useEffect(() => {
     const handleLogin = () => {
       console.log("Login event detected");
@@ -206,22 +203,7 @@ function App() {
             ) : (
               <Layout>
                 <ProfilePage />
-              </Layout>
-            )}
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            {shouldHideHeader ? (
-              <SettingsPage />
-            ) : (
-              <Layout>
-                <SettingsPage />
-              </Layout>
+            </Layout>
             )}
           </ProtectedRoute>
         }
