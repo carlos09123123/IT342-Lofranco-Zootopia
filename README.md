@@ -1,6 +1,3 @@
-
-# 🐾 Zootopia — Pet Shop System
-=======
 # 🐾 Zooopia — Pet Shop System
 >>>>>>> Vertical-Slice-Refactoring
 
