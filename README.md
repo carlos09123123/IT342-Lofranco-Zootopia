@@ -1,7 +1,4 @@
-Here's the organized GitHub README for Pawtopia:
-markdown<div align="center">
 
-<<<<<<< HEAD
 # 🐾 Zootopia — Pet Shop System
 =======
 # 🐾 Zooopia — Pet Shop System
