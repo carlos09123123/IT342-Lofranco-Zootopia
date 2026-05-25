@@ -1,7 +1,11 @@
 Here's the organized GitHub README for Pawtopia:
 markdown<div align="center">
 
+<<<<<<< HEAD
 # 🐾 Zootopia — Pet Shop System
+=======
+# 🐾 Zooopia — Pet Shop System
+>>>>>>> Vertical-Slice-Refactoring
 
 **IT342 Project** · A full-stack pet shop management platform for customers and administrators
 
@@ -41,6 +45,9 @@ Zootopia is a one-stop solution for pet owners and shop managers alike. Customer
 |-------|------------|
 | Backend | Java Spring Boot (IntelliJ) |
 | Web Frontend | React.js (VS Code) |
+# 🐾 Zootopia — Pet Shop System
+
+
 | Mobile Frontend | Kotlin (Android Studio) |
 | Database | PostgreSQL via Neon |
 | API Testing | Postman |
